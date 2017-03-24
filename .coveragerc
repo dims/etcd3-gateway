@@ -1,0 +1,6 @@
+[run]
+branch = True
+source = etcd3-gateway
+
+[report]
+ignore_errors = True
