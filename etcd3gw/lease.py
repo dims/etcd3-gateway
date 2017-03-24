@@ -1,0 +1,43 @@
+#    Licensed under the Apache License, Version 2.0 (the "License"); you may
+#    not use this file except in compliance with the License. You may obtain
+#    a copy of the License at
+#
+#         http://www.apache.org/licenses/LICENSE-2.0
+#
+#    Unless required by applicable law or agreed to in writing, software
+#    distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+#    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+#    License for the specific language governing permissions and limitations
+#    under the License.
+
+import base64
+
+import six
+
+
+class Lease(object):
+    def __init__(self, id, client=None):
+        self.id = id
+        self.client = client
+
+    def revoke(self):
+        self.client.post(self.client.get_url("/kv/lease/revoke"),
+                         json={"ID": self.id})
+        return True
+
+    def ttl(self):
+        result = self.client.post(self.client.get_url("/kv/lease/timetolive"),
+                                  json={"ID": self.id})
+        return int(result['TTL'])
+
+    def refresh(self):
+        result = self.client.post(self.client.get_url("/lease/keepalive"),
+                                  json={"ID": self.id})
+        return int(result['result']['TTL'])
+
+    def keys(self):
+        result = self.client.post(self.client.get_url("/kv/lease/timetolive"),
+                                  json={"ID": self.id,
+                                        "keys": True})
+        return [base64.b64decode(six.b(key)).decode('utf-8')
+                for key in result['keys']]

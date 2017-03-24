@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 # Licensed under the Apache License, Version 2.0 (the "License"); you may
 # not use this file except in compliance with the License. You may obtain
 # a copy of the License at
@@ -16,13 +14,12 @@
 test_etcd3-gateway
 ----------------------------------
 
-Tests for `etcd3-gateway` module.
+Tests for `etcd3gw` module.
 """
 
-from etcd3-gateway.tests import base
+from etcd3gw.tests import base
 
 
-class TestEtcd3-gateway(base.TestCase):
-
+class TestEtcd3Gateway(base.TestCase):
     def test_something(self):
         pass

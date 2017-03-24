@@ -1,0 +1,20 @@
+# ref: https://docs.travis-ci.com/user/languages/python
+language: python
+sudo: true
+services:
+  - docker
+env:
+  - TOXENV=py35
+  - TOXENV=py34
+  - TOXENV=py27
+  - TOXENV=py27-functional
+  - TOXENV=py35-functional
+  - TOXENV=update-pep8
+  - TOXENV=docs
+  - TOXENV=coverage,codecov
+
+install:
+  - pip install tox
+
+script:
+  - tox
