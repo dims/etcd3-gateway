@@ -9,7 +9,7 @@ env:
   - TOXENV=py27-etcd
   - TOXENV=py35
   - TOXENV=py35-etcd
-  - TOXENV=cover
+  - TOXENV=cover,codecov
   - TOXENV=docs
   - TOXENV=examples
   - TOXENV=releasenotes
