@@ -52,10 +52,12 @@ class TestEtcd3Gateway(base.TestCase):
         _is_etcd3_running(), "etcd3 is not available")
     def test_client_with_keys_and_values(self):
         self.assertTrue(self.client.put('foo0', 'bar0'))
-        self.assertTrue(self.client.put('foo1', 'bar1'))
+        self.assertTrue(self.client.put('foo1', 2001))
+        self.assertTrue(self.client.put('foo2', 'bar2'.encode("utf-8")))
 
         self.assertEqual(['bar0'], self.client.get('foo0'))
-        self.assertEqual(['bar1'], self.client.get('foo1'))
+        self.assertEqual(['2001'], self.client.get('foo1'))
+        self.assertEqual(['bar2'], self.client.get('foo2'))
 
         self.assertEqual(True, self.client.delete('foo0'))
         self.assertEqual([], self.client.get('foo0'))
@@ -85,16 +87,16 @@ class TestEtcd3Gateway(base.TestCase):
         lease = self.client.lease(ttl=60)
         self.assertIsNotNone(lease)
 
-        self.assertTrue(self.client.put('foo2', 'bar2', lease))
-        self.assertTrue(self.client.put('foo3', 'bar3', lease))
+        self.assertTrue(self.client.put('foo12', 'bar12', lease))
+        self.assertTrue(self.client.put('foo13', 'bar13', lease))
 
         keys = lease.keys()
         self.assertEqual(2, len(keys))
-        self.assertIn('foo2', keys)
-        self.assertIn('foo3', keys)
+        self.assertIn('foo12', keys)
+        self.assertIn('foo13', keys)
 
-        self.assertEqual(['bar2'], self.client.get('foo2'))
-        self.assertEqual(['bar3'], self.client.get('foo3'))
+        self.assertEqual(['bar12'], self.client.get('foo12'))
+        self.assertEqual(['bar13'], self.client.get('foo13'))
 
         self.assertTrue(lease.revoke())
 

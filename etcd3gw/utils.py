@@ -14,16 +14,18 @@ import base64
 
 import six
 
+bytes_types = (bytes, bytearray)
+
 
 def _encode(data):
-    if isinstance(data, six.string_types):
-        data = six.b(data)
+    if not isinstance(data, bytes_types):
+        data = six.b(str(data))
     return base64.b64encode(data).decode("utf-8")
 
 
 def _decode(data):
-    if isinstance(data, six.string_types):
-        data = six.b(data)
+    if not isinstance(data, bytes_types):
+        data = six.b(str(data))
     return base64.b64decode(data).decode("utf-8")
 
 
