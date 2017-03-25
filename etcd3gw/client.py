@@ -89,4 +89,4 @@ class Client(object):
 
     def transaction(self, txn):
         return self.post(self.get_url("/kv/txn"),
-                                 data=json.dumps(txn))
+                         data=json.dumps(txn))

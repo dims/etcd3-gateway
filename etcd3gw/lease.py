@@ -10,9 +10,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import base64
-
-import six
+from etcd3gw.utils import _decode
 
 
 class Lease(object):
@@ -40,5 +38,4 @@ class Lease(object):
                                   json={"ID": self.id,
                                         "keys": True})
         keys = result['keys'] if 'keys' in result else []
-        return [base64.b64decode(six.b(key)).decode('utf-8')
-                for key in keys]
+        return [_decode(key) for key in keys]

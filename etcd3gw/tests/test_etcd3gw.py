@@ -17,8 +17,9 @@ test_etcd3-gateway
 Tests for `etcd3gw` module.
 """
 
-from testtools.testcase import unittest
 import time
+
+from testtools.testcase import unittest
 import urllib3
 
 from etcd3gw.client import Client
@@ -49,6 +50,20 @@ class TestEtcd3Gateway(base.TestCase):
 
     @unittest.skipUnless(
         _is_etcd3_running(), "etcd3 is not available")
+    def test_client_with_keys_and_values(self):
+        self.assertTrue(self.client.put('foo0', 'bar0'))
+        self.assertTrue(self.client.put('foo1', 'bar1'))
+
+        self.assertEqual(['bar0'], self.client.get('foo0'))
+        self.assertEqual(['bar1'], self.client.get('foo1'))
+
+        self.assertEqual(True, self.client.delete('foo0'))
+        self.assertEqual([], self.client.get('foo0'))
+
+        self.assertEqual(False, self.client.delete('foo0'))
+
+    @unittest.skipUnless(
+        _is_etcd3_running(), "etcd3 is not available")
     def test_client_lease(self):
         lease = self.client.lease(ttl=60)
         self.assertIsNotNone(lease)
@@ -61,6 +76,25 @@ class TestEtcd3Gateway(base.TestCase):
 
         ttl = lease.refresh()
         self.assertTrue(0 <= ttl <= 60)
+
+        self.assertTrue(lease.revoke())
+
+    @unittest.skipUnless(
+        _is_etcd3_running(), "etcd3 is not available")
+    def test_client_lease_with_keys(self):
+        lease = self.client.lease(ttl=60)
+        self.assertIsNotNone(lease)
+
+        self.assertTrue(self.client.put('foo2', 'bar2', lease))
+        self.assertTrue(self.client.put('foo3', 'bar3', lease))
+
+        keys = lease.keys()
+        self.assertEqual(2, len(keys))
+        self.assertIn('foo2', keys)
+        self.assertIn('foo3', keys)
+
+        self.assertEqual(['bar2'], self.client.get('foo2'))
+        self.assertEqual(['bar3'], self.client.get('foo3'))
 
         self.assertTrue(lease.revoke())
 
