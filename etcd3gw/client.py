@@ -88,9 +88,5 @@ class Client(object):
         return False
 
     def transaction(self, txn):
-        resp = self.session.post(self.get_url("/kv/txn"),
+        return self.post(self.get_url("/kv/txn"),
                                  data=json.dumps(txn))
-        if resp.status_code != 200:
-            raise requests.exceptions.RequestException(
-                'Bad response code : %d' % resp.status_code)
-        return resp.json()

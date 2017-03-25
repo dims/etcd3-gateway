@@ -66,14 +66,27 @@ class TestEtcd3Gateway(base.TestCase):
 
     @unittest.skipUnless(
         _is_etcd3_running(), "etcd3 is not available")
+    def test_client_lock_acquire_release(self):
+        with self.client.lock(ttl=60) as lock:
+            ttl = lock.refresh()
+            self.assertTrue(0 <= ttl <= 60)
+        self.assertFalse(lock.is_acquired())
+
+        with self.client.lock(ttl=60) as lock:
+            self.assertFalse(lock.acquire())
+
+    @unittest.skipUnless(
+        _is_etcd3_running(), "etcd3 is not available")
     def test_client_locks(self):
         lock = self.client.lock(id='xyz-%s' % time.clock(), ttl=60)
         self.assertIsNotNone(lock)
 
         self.assertTrue(lock.acquire())
+
         ttl = lock.refresh()
         self.assertTrue(0 <= ttl <= 60)
 
         self.assertTrue(lock.is_acquired())
         self.assertTrue(lock.release())
+        self.assertFalse(lock.release())
         self.assertFalse(lock.is_acquired())

@@ -81,10 +81,7 @@ class Lock(object):
         return False
 
     def refresh(self):
-        if self.lease:
-            return self.lease.refresh()
-        else:
-            raise ValueError('No lease associated with this lock')
+        return self.lease.refresh()
 
     def is_acquired(self):
         values = self.client.get(self.key)
