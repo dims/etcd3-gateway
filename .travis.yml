@@ -6,7 +6,9 @@ services:
 env:
   - TOXENV=pep8
   - TOXENV=py27
+  - TOXENV=py27-etcd
   - TOXENV=py35
+  - TOXENV=py35-etcd
   - TOXENV=cover
   - TOXENV=docs
   - TOXENV=examples
