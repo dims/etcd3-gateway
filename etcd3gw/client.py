@@ -12,11 +12,13 @@
 
 import base64
 import json
+import uuid
 
 import requests
 import six
 
 from etcd3gw.lease import Lease
+from etcd3gw.lock import Lock
 from etcd3gw.utils import _encode
 from etcd3gw.utils import DEFAULT_TIMEOUT
 
@@ -47,6 +49,9 @@ class Client(object):
         result = self.post(self.get_url("/lease/grant"),
                            json={"TTL": ttl, "ID": 0})
         return Lease(int(result['ID']), client=self)
+
+    def lock(self, id=str(uuid.uuid4()), ttl=DEFAULT_TIMEOUT):
+        return Lock(id, ttl=ttl, client=self)
 
     def put(self, key, value, lease=None):
         payload = {

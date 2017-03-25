@@ -39,5 +39,6 @@ class Lease(object):
         result = self.client.post(self.client.get_url("/kv/lease/timetolive"),
                                   json={"ID": self.id,
                                         "keys": True})
+        keys = result['keys'] if 'keys' in result else []
         return [base64.b64decode(six.b(key)).decode('utf-8')
-                for key in result['keys']]
+                for key in keys]
