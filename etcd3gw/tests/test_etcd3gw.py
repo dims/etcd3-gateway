@@ -17,9 +17,11 @@ test_etcd3-gateway
 Tests for `etcd3gw` module.
 """
 
+from etcd3gw.client import Client
 from etcd3gw.tests import base
 
 
 class TestEtcd3Gateway(base.TestCase):
     def test_something(self):
-        pass
+        client = Client()
+        self.assertIsNotNone(client.status())
