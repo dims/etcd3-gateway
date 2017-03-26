@@ -109,6 +109,24 @@ class TestEtcd3Gateway(base.TestCase):
 
     @unittest.skipUnless(
         _is_etcd3_running(), "etcd3 is not available")
+    def test_replace_success(self):
+        self.client.put('/doot/thing', 'toot')
+        status = self.client.replace('/doot/thing', 'toot', 'doot')
+        v = self.client.get('/doot/thing')
+        self.assertEqual(['doot'], v)
+        self.assertTrue(status)
+
+    @unittest.skipUnless(
+        _is_etcd3_running(), "etcd3 is not available")
+    def test_replace_fail(self):
+        self.client.put('/doot/thing', 'boot')
+        status = self.client.replace('/doot/thing', 'toot', 'doot')
+        v = self.client.get('/doot/thing')
+        self.assertEqual(['boot'], v)
+        self.assertFalse(status)
+
+    @unittest.skipUnless(
+        _is_etcd3_running(), "etcd3 is not available")
     def test_client_lease(self):
         lease = self.client.lease(ttl=60)
         self.assertIsNotNone(lease)

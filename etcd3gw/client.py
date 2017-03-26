@@ -186,6 +186,45 @@ class Client(object):
                         range_end=_encode(_increment_last_byte(key_prefix)),
                         sort_order=sort_order)
 
+    def replace(self, key, initial_value, new_value):
+        """Atomically replace the value of a key with a new value.
+
+        This compares the current value of a key, then replaces it with a new
+        value if it is equal to a specified value. This operation takes place
+        in a transaction.
+
+        :param key: key in etcd to replace
+        :param initial_value: old value to replace
+        :type initial_value: bytes or string
+        :param new_value: new value of the key
+        :type new_value: bytes or string
+        :returns: status of transaction, ``True`` if the replace was
+                  successful, ``False`` otherwise
+        :rtype: bool
+        """
+        base64_key = _encode(key)
+        base64_initial_value = _encode(initial_value)
+        base64_new_value = _encode(new_value)
+        txn = {
+            'compare': [{
+                'key': base64_key,
+                'result': 'EQUAL',
+                'target': 'VALUE',
+                'value': base64_initial_value
+            }],
+            'success': [{
+                'request_put': {
+                    'key': base64_key,
+                    'value': base64_new_value,
+                }
+            }],
+            'failure': []
+        }
+        result = self.transaction(txn)
+        if 'succeeded' in result:
+            return result['succeeded']
+        return False
+
     def delete(self, key, **kwargs):
         """DeleteRange deletes the given range from the key-value store.
 
