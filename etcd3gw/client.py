@@ -105,15 +105,44 @@ class Client(object):
         self.post(self.get_url("/kv/put"), json=payload)
         return True
 
-    def get(self, key, metadata=False, **kwargs):
+    def get(self, key, metadata=False, sort_order=None,
+            sort_target=None, **kwargs):
         """Range gets the keys in the range from the key-value store.
 
         :param key:
+        :param metadata:
+        :param sort_order: 'ascend' or 'descend' or None
+        :param sort_target: 'key' or 'version' or 'create' or 'mod' or 'value'
         :param kwargs:
         :return:
         """
+        if sort_order is None:
+            order = 0
+        elif sort_order == 'ascend':
+            order = 1
+        elif sort_order == 'descend':
+            order = 2
+        else:
+            raise ValueError('unknown sort order: "{}"'.format(sort_order))
+
+        if sort_target is None or sort_target == 'key':
+            target = 0
+        elif sort_target == 'version':
+            target = 1
+        elif sort_target == 'create':
+            target = 2
+        elif sort_target == 'mod':
+            target = 3
+        elif sort_target == 'value':
+            target = 4
+        else:
+            raise ValueError('sort_target must be one of "key", '
+                             '"version", "create", "mod" or "value"')
+
         payload = {
             "key": _encode(key),
+            "sort_order": order,
+            "sort_target": target,
         }
         payload.update(kwargs)
         result = self.post(self.get_url("/kv/range"),
@@ -131,24 +160,31 @@ class Client(object):
         else:
             return [_decode(item['value']) for item in result['kvs']]
 
-    def get_prefix(self, key_prefix, sort_order=None):
+    def get_all(self, sort_order=None, sort_target='key'):
+        """Get all keys currently stored in etcd.
+
+        :returns: sequence of (value, metadata) tuples
+        """
+        return self.get(
+            key=_encode(b'\0'),
+            metadata=True,
+            sort_order=sort_order,
+            sort_target=sort_target,
+            range_end=_encode(b'\0'),
+        )
+
+    def get_prefix(self, key_prefix, sort_order=None, sort_target=None):
         """Get a range of keys with a prefix.
 
-        :param sort_order: 'ascend' or 'descend'
+        :param sort_order: 'ascend' or 'descend' or None
         :param key_prefix: first key in range
 
         :returns: sequence of (value, metadata) tuples
         """
-        order = 0
-        if sort_order == 'ascend':
-            order = 1
-        elif sort_order == 'descend':
-            order = 2
-
         return self.get(key_prefix,
                         metadata=True,
                         range_end=_encode(_increment_last_byte(key_prefix)),
-                        sort_order=order)
+                        sort_order=sort_order)
 
     def delete(self, key, **kwargs):
         """DeleteRange deletes the given range from the key-value store.

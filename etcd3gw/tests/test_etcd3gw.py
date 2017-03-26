@@ -63,6 +63,7 @@ class TestEtcd3Gateway(base.TestCase):
         self.assertEqual([], self.client.get('foo0'))
 
         self.assertEqual(False, self.client.delete('foo0'))
+        self.assertTrue(len(self.client.get_all()) > 0)
 
     @unittest.skipUnless(
         _is_etcd3_running(), "etcd3 is not available")
