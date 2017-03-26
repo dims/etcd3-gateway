@@ -77,6 +77,8 @@ class TestEtcd3Gateway(base.TestCase):
             self.assertEqual('i am a range', value)
             self.assertTrue(metadata['key'].startswith('/doot1/range'))
 
+    @unittest.skipUnless(
+        _is_etcd3_running(), "etcd3 is not available")
     def test_get_prefix_sort_order(self):
         def remove_prefix(string, prefix):
             return string[len(prefix):]
