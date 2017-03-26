@@ -10,15 +10,14 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import base64
 import json
 import uuid
 
 import requests
-import six
 
 from etcd3gw.lease import Lease
 from etcd3gw.lock import Lock
+from etcd3gw.utils import _decode
 from etcd3gw.utils import _encode
 from etcd3gw.utils import _increment_last_byte
 from etcd3gw.utils import DEFAULT_TIMEOUT
@@ -106,7 +105,7 @@ class Client(object):
         self.post(self.get_url("/kv/put"), json=payload)
         return True
 
-    def get(self, key, **kwargs):
+    def get(self, key, metadata=False, **kwargs):
         """Range gets the keys in the range from the key-value store.
 
         :param key:
@@ -121,19 +120,35 @@ class Client(object):
                            json=payload)
         if 'kvs' not in result:
             return []
-        return [base64.b64decode(six.b(item['value'])).decode('utf-8')
-                for item in result['kvs']]
+
+        if metadata:
+            def value_with_metadata(item):
+                item['key'] = _decode(item['key'])
+                value = _decode(item.pop('value'))
+                return value, item
+
+            return [value_with_metadata(item) for item in result['kvs']]
+        else:
+            return [_decode(item['value']) for item in result['kvs']]
 
     def get_prefix(self, key_prefix, sort_order=None):
         """Get a range of keys with a prefix.
 
+        :param sort_order: 'ascend' or 'descend'
         :param key_prefix: first key in range
 
         :returns: sequence of (value, metadata) tuples
         """
+        order = 0
+        if sort_order == 'ascend':
+            order = 1
+        elif sort_order == 'descend':
+            order = 2
+
         return self.get(key_prefix,
+                        metadata=True,
                         range_end=_encode(_increment_last_byte(key_prefix)),
-                        sort_order=sort_order)
+                        sort_order=order)
 
     def delete(self, key, **kwargs):
         """DeleteRange deletes the given range from the key-value store.

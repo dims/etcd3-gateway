@@ -68,12 +68,37 @@ class TestEtcd3Gateway(base.TestCase):
         _is_etcd3_running(), "etcd3 is not available")
     def test_get_prefix(self):
         for i in range(20):
-            self.client.put('/doot/range{}'.format(i), 'i am a range')
+            self.client.put('/doot1/range{}'.format(i), 'i am a range')
 
-        values = list(self.client.get_prefix('/doot/range'))
+        values = list(self.client.get_prefix('/doot1/range'))
         assert len(values) == 20
-        for value in values:
+        for value, metadata in values:
             self.assertEqual('i am a range', value)
+            self.assertTrue(metadata['key'].startswith('/doot1/range'))
+
+    def test_get_prefix_sort_order(self):
+        def remove_prefix(string, prefix):
+            return string[len(prefix):]
+
+        initial_keys = 'abcde'
+        initial_values = 'qwert'
+
+        for k, v in zip(initial_keys, initial_values):
+            self.client.put('/doot2/{}'.format(k), v)
+
+        keys = ''
+        for value, meta in self.client.get_prefix(
+                '/doot2', sort_order='ascend'):
+            keys += remove_prefix(meta['key'], '/doot2/')
+
+        assert keys == initial_keys
+
+        reverse_keys = ''
+        for value, meta in self.client.get_prefix(
+                '/doot2', sort_order='descend'):
+            reverse_keys += remove_prefix(meta['key'], '/doot2/')
+
+        assert reverse_keys == ''.join(reversed(initial_keys))
 
     @unittest.skipUnless(
         _is_etcd3_running(), "etcd3 is not available")
