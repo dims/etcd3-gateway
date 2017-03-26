@@ -118,6 +118,7 @@ class TestEtcd3Gateway(base.TestCase):
         self.assertIsNotNone(lock)
 
         self.assertTrue(lock.acquire())
+        self.assertIsNotNone(lock.uuid)
 
         ttl = lock.refresh()
         self.assertTrue(0 <= ttl <= 60)
