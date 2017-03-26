@@ -207,6 +207,11 @@ class Client(object):
             return True
         return False
 
+    def delete_prefix(self, key_prefix):
+        """Delete a range of keys with a prefix in etcd."""
+        return self.delete(
+            key_prefix, range_end=_encode(_increment_last_byte(key_prefix)))
+
     def transaction(self, txn):
         """Txn processes multiple requests in a single transaction.
 

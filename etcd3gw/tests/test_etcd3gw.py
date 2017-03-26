@@ -67,7 +67,7 @@ class TestEtcd3Gateway(base.TestCase):
 
     @unittest.skipUnless(
         _is_etcd3_running(), "etcd3 is not available")
-    def test_get_prefix(self):
+    def test_get_and_delete_prefix(self):
         for i in range(20):
             self.client.put('/doot1/range{}'.format(i), 'i am a range')
 
@@ -76,6 +76,10 @@ class TestEtcd3Gateway(base.TestCase):
         for value, metadata in values:
             self.assertEqual('i am a range', value)
             self.assertTrue(metadata['key'].startswith('/doot1/range'))
+
+        self.assertEqual(True, self.client.delete_prefix('/doot1/range'))
+        values = list(self.client.get_prefix('/doot1/range'))
+        assert len(values) == 0
 
     @unittest.skipUnless(
         _is_etcd3_running(), "etcd3 is not available")
