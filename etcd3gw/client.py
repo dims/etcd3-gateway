@@ -20,6 +20,7 @@ import six
 from etcd3gw.lease import Lease
 from etcd3gw.lock import Lock
 from etcd3gw.utils import _encode
+from etcd3gw.utils import _increment_last_byte
 from etcd3gw.utils import DEFAULT_TIMEOUT
 
 
@@ -122,6 +123,17 @@ class Client(object):
             return []
         return [base64.b64decode(six.b(item['value'])).decode('utf-8')
                 for item in result['kvs']]
+
+    def get_prefix(self, key_prefix, sort_order=None):
+        """Get a range of keys with a prefix.
+
+        :param key_prefix: first key in range
+
+        :returns: sequence of (value, metadata) tuples
+        """
+        return self.get(key_prefix,
+                        range_end=_encode(_increment_last_byte(key_prefix)),
+                        sort_order=sort_order)
 
     def delete(self, key, **kwargs):
         """DeleteRange deletes the given range from the key-value store.

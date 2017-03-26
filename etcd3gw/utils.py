@@ -39,5 +39,21 @@ def _decode(data):
     return base64.b64decode(data).decode("utf-8")
 
 
+def _increment_last_byte(data):
+    """Get the last byte in the array and increment it
+
+    :param bytes_string:
+    :return:
+    """
+    if not isinstance(data, bytes_types):
+        if isinstance(data, six.string_types):
+            data = data.encode('utf-8')
+        else:
+            data = six.b(str(data))
+    s = bytearray(data)
+    s[-1] = s[-1] + 1
+    return bytes(s)
+
+
 DEFAULT_TIMEOUT = 30
 LOCK_PREFIX = '/locks/'

@@ -66,6 +66,17 @@ class TestEtcd3Gateway(base.TestCase):
 
     @unittest.skipUnless(
         _is_etcd3_running(), "etcd3 is not available")
+    def test_get_prefix(self):
+        for i in range(20):
+            self.client.put('/doot/range{}'.format(i), 'i am a range')
+
+        values = list(self.client.get_prefix('/doot/range'))
+        assert len(values) == 20
+        for value in values:
+            self.assertEqual('i am a range', value)
+
+    @unittest.skipUnless(
+        _is_etcd3_running(), "etcd3 is not available")
     def test_client_lease(self):
         lease = self.client.lease(ttl=60)
         self.assertIsNotNone(lease)
