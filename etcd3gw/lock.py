@@ -19,19 +19,31 @@ from etcd3gw.utils import LOCK_PREFIX
 
 class Lock(object):
     def __init__(self, name, ttl=DEFAULT_TIMEOUT, client=None):
+        """Create a lock using the given name with specified timeout
+
+        :param name:
+        :param ttl:
+        :param client:
+        """
         self.name = name
         self.ttl = ttl
         self.client = client
         self.key = LOCK_PREFIX + self.name
         self.lease = None
-        self.uuid = None
+        self._uuid = None
+
+    @property
+    def uuid(self):
+        """The unique id of the lock"""
+        return self._uuid
 
     def acquire(self):
+        """Acquire the lock."""
         self.lease = self.client.lease(self.ttl)
-        self.uuid = str(uuid.uuid1())
+        self._uuid = str(uuid.uuid1())
 
         base64_key = _encode(self.key)
-        base64_value = _encode(self.uuid)
+        base64_value = _encode(self._uuid)
         txn = {
             'compare': [{
                 'key': base64_key,
@@ -58,8 +70,9 @@ class Lock(object):
         return False
 
     def release(self):
+        """Release the lock"""
         base64_key = _encode(self.key)
-        base64_value = _encode(self.uuid)
+        base64_value = _encode(self._uuid)
 
         txn = {
             'compare': [{
@@ -81,13 +94,19 @@ class Lock(object):
         return False
 
     def refresh(self):
+        """Refresh the lease on the lock
+
+        :return:
+        """
         return self.lease.refresh()
 
     def is_acquired(self):
+        """Check if the lock is acquired"""
         values = self.client.get(self.key)
-        return self.uuid in values
+        return self._uuid in values
 
     def __enter__(self):
+        """Use the lock as a contextmanager"""
         self.acquire()
         return self
 

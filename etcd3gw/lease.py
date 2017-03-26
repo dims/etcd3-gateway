@@ -15,25 +15,59 @@ from etcd3gw.utils import _decode
 
 class Lease(object):
     def __init__(self, id, client=None):
+        """Lease object for expiring keys
+
+        :param id:
+        :param client:
+        """
         self.id = id
         self.client = client
 
     def revoke(self):
+        """LeaseRevoke revokes a lease.
+
+        All keys attached to the lease will expire and be deleted.
+        This method makes a synchronous HTTP request by default. To make an
+        asynchronous HTTP request, please define a `callback` function
+        to be invoked when receiving the response.
+
+        :return:
+        """
         self.client.post(self.client.get_url("/kv/lease/revoke"),
                          json={"ID": self.id})
         return True
 
     def ttl(self):
+        """LeaseTimeToLive retrieves lease information.
+
+        This method makes a synchronous HTTP request by default. To make an
+        asynchronous HTTP request, please define a `callback` function
+        to be invoked when receiving the response.
+
+        :return:
+        """
         result = self.client.post(self.client.get_url("/kv/lease/timetolive"),
                                   json={"ID": self.id})
         return int(result['TTL'])
 
     def refresh(self):
+        """LeaseKeepAlive keeps the lease alive
+
+        By streaming keep alive requests from the client to the server and
+        streaming keep alive responses from the server to the client.
+        This method makes a synchronous HTTP request by default.
+
+        :return:
+        """
         result = self.client.post(self.client.get_url("/lease/keepalive"),
                                   json={"ID": self.id})
         return int(result['result']['TTL'])
 
     def keys(self):
+        """Get the keys associated with this lease.
+
+        :return:
+        """
         result = self.client.post(self.client.get_url("/kv/lease/timetolive"),
                                   json={"ID": self.id,
                                         "keys": True})
