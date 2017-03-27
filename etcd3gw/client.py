@@ -11,9 +11,11 @@
 #    under the License.
 
 import json
+import threading
 import uuid
 
 import requests
+from six.moves import queue
 
 from etcd3gw.lease import Lease
 from etcd3gw.lock import Lock
@@ -21,6 +23,7 @@ from etcd3gw.utils import _decode
 from etcd3gw.utils import _encode
 from etcd3gw.utils import _increment_last_byte
 from etcd3gw.utils import DEFAULT_TIMEOUT
+from etcd3gw import watch
 
 
 class Client(object):
@@ -263,3 +266,68 @@ class Client(object):
         """
         return self.post(self.get_url("/kv/txn"),
                          data=json.dumps(txn))
+
+    def watch(self, key, **kwargs):
+        """Watch a key.
+
+        :param key: key to watch
+
+        :returns: tuple of ``events_iterator`` and ``cancel``.
+                  Use ``events_iterator`` to get the events of key changes
+                  and ``cancel`` to cancel the watch request
+        """
+        event_queue = queue.Queue()
+
+        def callback(event):
+            event_queue.put(event)
+
+        w = watch.Watcher(self, key, callback, **kwargs)
+        canceled = threading.Event()
+
+        def cancel():
+            canceled.set()
+            event_queue.put(None)
+            w.cancel()
+
+        def iterator():
+            while not canceled.is_set():
+                event = event_queue.get()
+                if event is None:
+                    canceled.set()
+                if not canceled.is_set():
+                    yield event
+
+        return iterator(), cancel
+
+    def watch_prefix(self, key_prefix, **kwargs):
+        """The same as ``watch``, but watches a range of keys with a prefix."""
+        kwargs['range_end'] = \
+            _increment_last_byte(_encode(key_prefix))
+        return self.watch(key_prefix, **kwargs)
+
+    def watch_once(self, key, timeout=None, **kwargs):
+        """Watch a key and stops after the first event.
+
+        :param key: key to watch
+        :param timeout: (optional) timeout in seconds.
+        :returns: event
+        """
+        event_queue = queue.Queue()
+
+        def callback(event):
+            event_queue.put(event)
+
+        w = watch.Watcher(self, key, callback, **kwargs)
+
+        try:
+            return event_queue.get(timeout=timeout)
+        except queue.Empty:
+            raise watch.WatchTimedOut()
+        finally:
+            w.cancel(self)
+
+    def watch_prefix_once(self, key_prefix, timeout=None, **kwargs):
+        """Watches a range of keys with a prefix, similar to watch_once"""
+        kwargs['range_end'] = \
+            _increment_last_byte(_encode(key_prefix))
+        return self.watch_once(key_prefix, timeout=timeout, **kwargs)
