@@ -5,6 +5,8 @@ services:
   - docker
 env:
   - TOXENV=pep8
+  - TOXENV=pypy
+  - TOXENV=pypy-etcd
   - TOXENV=py27
   - TOXENV=py27-etcd
   - TOXENV=py35
