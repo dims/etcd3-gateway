@@ -25,6 +25,9 @@ from etcd3gw.utils import _increment_last_byte
 from etcd3gw.utils import DEFAULT_TIMEOUT
 from etcd3gw import watch
 
+_SORT_ORDER = ['ascend', 'descend']
+_SORT_TARGET = ['key', 'version', 'create', 'mod', 'value']
+
 
 class Client(object):
     def __init__(self, host="localhost", port=2379, protocol="http"):
@@ -119,26 +122,18 @@ class Client(object):
         :param kwargs:
         :return:
         """
-        if sort_order is None:
+        try:
             order = 0
-        elif sort_order == 'ascend':
-            order = 1
-        elif sort_order == 'descend':
-            order = 2
-        else:
-            raise ValueError('unknown sort order: "{}"'.format(sort_order))
+            if sort_order:
+                order = _SORT_ORDER.index(sort_order) + 1
+        except ValueError:
+            raise ValueError('sort_order must be one of "ascend" or "descend"')
 
-        if sort_target is None or sort_target == 'key':
+        try:
             target = 0
-        elif sort_target == 'version':
-            target = 1
-        elif sort_target == 'create':
-            target = 2
-        elif sort_target == 'mod':
-            target = 3
-        elif sort_target == 'value':
-            target = 4
-        else:
+            if sort_target:
+                target = _SORT_TARGET.index(sort_target) + 1
+        except ValueError:
             raise ValueError('sort_target must be one of "key", '
                              '"version", "create", "mod" or "value"')
 
