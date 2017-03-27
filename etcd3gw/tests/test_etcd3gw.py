@@ -17,13 +17,16 @@ test_etcd3-gateway
 Tests for `etcd3gw` module.
 """
 
+import threading
 import time
+import uuid
 
 from testtools.testcase import unittest
 import urllib3
 
 from etcd3gw.client import Client
 from etcd3gw.tests import base
+from etcd3gw import watch
 
 
 def _is_etcd3_running():
@@ -110,18 +113,20 @@ class TestEtcd3Gateway(base.TestCase):
     @unittest.skipUnless(
         _is_etcd3_running(), "etcd3 is not available")
     def test_replace_success(self):
-        self.client.put('/doot/thing', 'toot')
-        status = self.client.replace('/doot/thing', 'toot', 'doot')
-        v = self.client.get('/doot/thing')
+        key = '/doot/thing' + str(uuid.uuid4())
+        self.client.put(key, 'toot')
+        status = self.client.replace(key, 'toot', 'doot')
+        v = self.client.get(key)
         self.assertEqual(['doot'], v)
         self.assertTrue(status)
 
     @unittest.skipUnless(
         _is_etcd3_running(), "etcd3 is not available")
     def test_replace_fail(self):
-        self.client.put('/doot/thing', 'boot')
-        status = self.client.replace('/doot/thing', 'toot', 'doot')
-        v = self.client.get('/doot/thing')
+        key = '/doot/thing' + str(uuid.uuid4())
+        self.client.put(key, 'boot')
+        status = self.client.replace(key, 'toot', 'doot')
+        v = self.client.get(key)
         self.assertEqual(['boot'], v)
         self.assertFalse(status)
 
@@ -160,6 +165,107 @@ class TestEtcd3Gateway(base.TestCase):
         self.assertEqual(['bar13'], self.client.get('foo13'))
 
         self.assertTrue(lease.revoke())
+
+    @unittest.skipUnless(
+        _is_etcd3_running(), "etcd3 is not available")
+    def test_watch_key(self):
+        key = '/%s-watch_key/watch' % str(uuid.uuid4())
+
+        def update_etcd(v):
+            self.client.put(key, v)
+            out = self.client.get(key)
+            self.assertEqual([v], out)
+
+        def update_key():
+            # sleep to make watch can get the event
+            time.sleep(3)
+            update_etcd('0')
+            time.sleep(1)
+            update_etcd('1')
+            time.sleep(1)
+            update_etcd('2')
+            time.sleep(1)
+            update_etcd('3')
+            time.sleep(1)
+
+        t = threading.Thread(name="update_key", target=update_key)
+        t.start()
+
+        change_count = 0
+        events_iterator, cancel = self.client.watch(key)
+        for event in events_iterator:
+            self.assertEqual(event['kv']['key'], key)
+            self.assertEqual(event['kv']['value'], str(change_count))
+
+            # if cancel worked, we should not receive event 3
+            assert event['kv']['value'] != '3'
+
+            change_count += 1
+            if change_count > 2:
+                # if cancel not work, we will block in this for-loop forever
+                cancel()
+
+        t.join()
+
+    @unittest.skipUnless(
+        _is_etcd3_running(), "etcd3 is not available")
+    def test_watch_prefix(self):
+        key = '/%s-watch_prefix/watch/prefix/' % str(uuid.uuid4())
+
+        def update_etcd(v):
+            self.client.put(key + v, v)
+            out = self.client.get(key + v)
+            self.assertEqual([v], out)
+
+        def update_key():
+            # sleep to make watch can get the event
+            time.sleep(3)
+            update_etcd('0')
+            time.sleep(1)
+            update_etcd('1')
+            time.sleep(1)
+            update_etcd('2')
+            time.sleep(1)
+            update_etcd('3')
+            time.sleep(1)
+
+        t = threading.Thread(name="update_key_prefix", target=update_key)
+        t.start()
+
+        change_count = 0
+        events_iterator, cancel = self.client.watch_prefix(key)
+        for event in events_iterator:
+            if not event['kv']['key'].startswith(key):
+                continue
+
+            self.assertEqual(event['kv']['key'], '%s%s' % (key, change_count))
+            self.assertEqual(event['kv']['value'], str(change_count))
+
+            # if cancel worked, we should not receive event 3
+            assert event['kv']['value'] != '3'
+
+            change_count += 1
+            if change_count > 2:
+                # if cancel not work, we will block in this for-loop forever
+                cancel()
+
+        t.join()
+
+    @unittest.skipUnless(
+        _is_etcd3_running(), "etcd3 is not available")
+    def test_sequential_watch_prefix_once(self):
+        try:
+            self.client.watch_prefix_once('/doot/', 1)
+        except watch.WatchTimedOut:
+            pass
+        try:
+            self.client.watch_prefix_once('/doot/', 1)
+        except watch.WatchTimedOut:
+            pass
+        try:
+            self.client.watch_prefix_once('/doot/', 1)
+        except watch.WatchTimedOut:
+            pass
 
     @unittest.skipUnless(
         _is_etcd3_running(), "etcd3 is not available")

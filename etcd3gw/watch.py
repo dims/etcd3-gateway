@@ -11,9 +11,9 @@
 #    under the License.
 
 import json
+import threading
 
-import futurist
-
+from etcd3gw.utils import _decode
 from etcd3gw.utils import _encode
 
 
@@ -21,40 +21,56 @@ class WatchTimedOut(Exception):
     pass
 
 
-def _watch(client, key, callback, **kwargs):
-    create_watch = {
-        'key': _encode(key)
-    }
-    if 'range_end' in kwargs:
-        create_watch['range_end'] = _encode(kwargs['range_end'])
-    if 'start_revision' in kwargs:
-        create_watch['start_revision'] = kwargs['start_revision']
-    if 'progress_notify' in kwargs:
-        create_watch['progress_notify'] = kwargs['progress_notify']
-    if 'filters' in kwargs:
-        create_watch['filters'] = kwargs['filters']
-    if 'prev_kv' in kwargs:
-        create_watch['prev_kv'] = kwargs['prev_kv']
-
-    create_request = {
-        "create_request": create_watch
-    }
-    resp = client.session.post(client.get_url('/watch'),
-                               json=create_request,
-                               stream=True)
-    for line in resp.iter_content(chunk_size=None, decode_unicode=True):
-        if line:
-            decoded_line = line.decode('utf-8')
-            callback(json.loads(decoded_line))
-
-
-class Watcher(object):
+class Watcher(threading.Thread):
     def __init__(self, client, key, callback, **kwargs):
-        self._executor = futurist.ThreadPoolExecutor(max_workers=1)
-        self._executor.submit(_watch, client, key, callback, **kwargs)
+        threading.Thread.__init__(self)
+        self.client = client
+        self._key = key
+        self._callback = callback
+        self._kwargs = kwargs
+        self._stopped = False
+        self.daemon = True
+        self.start()
 
-    def alive(self):
-        return self._executor.alive
+    def run(self):
+        create_watch = {
+            'key': _encode(self._key)
+        }
+        if 'range_end' in self._kwargs:
+            create_watch['range_end'] = _encode(self._kwargs['range_end'])
+        if 'start_revision' in self._kwargs:
+            create_watch['start_revision'] = self._kwargs['start_revision']
+        if 'progress_notify' in self._kwargs:
+            create_watch['progress_notify'] = self._kwargs['progress_notify']
+        if 'filters' in self._kwargs:
+            create_watch['filters'] = self._kwargs['filters']
+        if 'prev_kv' in self._kwargs:
+            create_watch['prev_kv'] = self._kwargs['prev_kv']
 
-    def shutdown(self):
-        self._executor.shutdown()
+        create_request = {
+            "create_request": create_watch
+        }
+        resp = self.client.session.post(self.client.get_url('/watch'),
+                                        json=create_request,
+                                        stream=True)
+        for line in resp.iter_content(chunk_size=None, decode_unicode=True):
+            if self._stopped:
+                break
+            if not line:
+                continue
+            decoded_line = line.decode('utf-8')
+            payload = json.loads(decoded_line)
+            if 'created' in payload['result']:
+                if payload['result']['created']:
+                    continue
+                else:
+                    raise Exception('Unable to create watch')
+            if 'events' in payload['result']:
+                for event in payload['result']['events']:
+                    event['kv']['key'] = _decode(event['kv']['key'])
+                    if 'value' in event['kv']:
+                        event['kv']['value'] = _decode(event['kv']['value'])
+                    self._callback(event)
+
+    def stop(self):
+        self._stopped = True

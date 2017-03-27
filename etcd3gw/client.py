@@ -282,7 +282,7 @@ class Client(object):
         def cancel():
             canceled.set()
             event_queue.put(None)
-            w.cancel()
+            w.stop()
 
         def iterator():
             while not canceled.is_set():
@@ -313,13 +313,12 @@ class Client(object):
             event_queue.put(event)
 
         w = watch.Watcher(self, key, callback, **kwargs)
-
         try:
             return event_queue.get(timeout=timeout)
         except queue.Empty:
             raise watch.WatchTimedOut()
         finally:
-            w.cancel(self)
+            w.stop()
 
     def watch_prefix_once(self, key_prefix, timeout=None, **kwargs):
         """Watches a range of keys with a prefix, similar to watch_once"""
