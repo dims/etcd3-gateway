@@ -24,7 +24,7 @@ import uuid
 from testtools.testcase import unittest
 import urllib3
 
-from etcd3gw.client import Client
+from etcd3gw.client import Etcd3Client
 from etcd3gw import exceptions
 from etcd3gw.tests import base
 
@@ -40,7 +40,7 @@ def _is_etcd3_running():
 class TestEtcd3Gateway(base.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.client = Client()
+        cls.client = Etcd3Client()
 
     @unittest.skipUnless(
         _is_etcd3_running(), "etcd3 is not available")

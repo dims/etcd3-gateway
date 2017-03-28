@@ -39,8 +39,9 @@ _EXCEPTIONS_BY_CODE = {
 }
 
 
-class Client(object):
-    def __init__(self, host="localhost", port=2379, protocol="http"):
+class Etcd3Client(object):
+    def __init__(self, host='localhost', port=2379, protocol="http",
+                 ca_cert=None, cert_key=None, cert_cert=None, timeout=None):
         """Construct an client to talk to etcd3's grpc-gateway's /v3alpha HTTP API
 
         :param host:
@@ -51,6 +52,11 @@ class Client(object):
         self.port = port
         self.protocol = protocol
         self.session = requests.Session()
+        self.kwargs = {
+            "timeout": timeout,
+            "verify": ca_cert,
+            "cert": (cert_cert, cert_key)
+        }
 
     def get_url(self, path):
         """Construct a full url to the v3alpha API given a specific path
@@ -341,3 +347,14 @@ class Client(object):
         kwargs['range_end'] = \
             _increment_last_byte(_encode(key_prefix))
         return self.watch_once(key_prefix, timeout=timeout, **kwargs)
+
+
+def client(host='localhost', port=2379,
+           ca_cert=None, cert_key=None, cert_cert=None, timeout=None):
+    """Return an instance of an Etcd3Client."""
+    return Etcd3Client(host=host,
+                       port=port,
+                       ca_cert=ca_cert,
+                       cert_key=cert_key,
+                       cert_cert=cert_cert,
+                       timeout=timeout)

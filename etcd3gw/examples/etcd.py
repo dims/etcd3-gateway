@@ -12,12 +12,12 @@
 
 import time
 
-from etcd3gw.client import Client
+from etcd3gw.client import Etcd3Client
 from etcd3gw.lock import Lock
 
 
 def main():
-    client = Client()
+    client = Etcd3Client()
 
     print('>>>> Status')
     result = client.status()

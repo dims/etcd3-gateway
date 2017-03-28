@@ -10,11 +10,11 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-from etcd3gw.client import Client
+from etcd3gw.client import Etcd3Client
 
 
 def main():
-    client = Client()
+    client = Etcd3Client()
     events, cancel = client.watch('foo')
     for event in events:
         print(">>>> event : %r", event)
