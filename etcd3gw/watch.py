@@ -12,10 +12,9 @@
 
 import json
 
-import futurist
-
 from etcd3gw.utils import _decode
 from etcd3gw.utils import _encode
+from etcd3gw.utils import _get_threadpool_executor
 
 
 class WatchTimedOut(Exception):
@@ -62,7 +61,8 @@ class Watcher(object):
                                              json=create_request,
                                              stream=True)
 
-        self._executor = futurist.ThreadPoolExecutor(max_workers=2)
+        clazz = _get_threadpool_executor()
+        self._executor = clazz(max_workers=2)
         self._executor.submit(_watch, self._response, callback)
 
     def stop(self):

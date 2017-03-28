@@ -11,7 +11,9 @@
 #    under the License.
 
 import base64
+import sys
 
+import futurist
 import six
 
 bytes_types = (bytes, bytearray)
@@ -57,3 +59,27 @@ def _increment_last_byte(data):
 
 DEFAULT_TIMEOUT = 30
 LOCK_PREFIX = '/locks/'
+
+
+def _import_module(import_str):
+    """Import a module."""
+    __import__(import_str)
+    return sys.modules[import_str]
+
+
+def _try_import(import_str, default=None):
+    """Try to import a module and if it fails return default."""
+    try:
+        return _import_module(import_str)
+    except ImportError:
+        return default
+
+# These may or may not exist; so carefully import them if we can...
+_eventlet = _try_import('eventlet')
+_patcher = _try_import('eventlet.patcher')
+
+
+def _get_threadpool_executor():
+    if all((_eventlet, _patcher)) and _patcher.is_monkey_patched('thread'):
+        return futurist.GreenThreadPoolExecutor
+    return futurist.ThreadPoolExecutor
