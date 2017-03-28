@@ -17,10 +17,6 @@ from etcd3gw.utils import _encode
 from etcd3gw.utils import _get_threadpool_executor
 
 
-class WatchTimedOut(Exception):
-    pass
-
-
 def _watch(resp, callback):
     for line in resp.iter_content(chunk_size=None, decode_unicode=True):
         decoded_line = line.decode('utf-8')

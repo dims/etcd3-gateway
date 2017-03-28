@@ -15,8 +15,10 @@ import threading
 import uuid
 
 import requests
+import six
 from six.moves import queue
 
+from etcd3gw import exceptions
 from etcd3gw.lease import Lease
 from etcd3gw.lock import Lock
 from etcd3gw.utils import _decode
@@ -27,6 +29,14 @@ from etcd3gw import watch
 
 _SORT_ORDER = ['ascend', 'descend']
 _SORT_TARGET = ['key', 'version', 'create', 'mod', 'value']
+
+_EXCEPTIONS_BY_CODE = {
+    requests.codes['internal_server_error']: exceptions.InternalServerError,
+    requests.codes['service_unavailable']: exceptions.ConnectionFailedError,
+    requests.codes['request_timeout']: exceptions.ConnectionTimeoutError,
+    requests.codes['gateway_timeout']: exceptions.ConnectionTimeoutError,
+    requests.codes['precondition_failed']: exceptions.PreconditionFailedError,
+}
 
 
 class Client(object):
@@ -58,10 +68,16 @@ class Client(object):
         :param kwargs:
         :return: json response
         """
-        resp = self.session.post(*args, **kwargs)
-        if resp.status_code != 200:
-            raise requests.exceptions.RequestException(
-                'Bad response code : %d' % resp.status_code)
+        try:
+            resp = self.session.post(*args, **kwargs)
+            if resp.status_code in _EXCEPTIONS_BY_CODE:
+                raise _EXCEPTIONS_BY_CODE[resp.status_code](resp.reason)
+            if resp.status_code != requests.codes['ok']:
+                raise exceptions.Etcd3Exception(resp.reason)
+        except requests.exceptions.Timeout as ex:
+            raise exceptions.ConnectionTimeoutError(six.text_type(ex))
+        except requests.exceptions.ConnectionError as ex:
+            raise exceptions.ConnectionFailedError(six.text_type(ex))
         return resp.json()
 
     def status(self):
@@ -316,7 +332,7 @@ class Client(object):
         try:
             return event_queue.get(timeout=timeout)
         except queue.Empty:
-            raise watch.WatchTimedOut()
+            raise exceptions.WatchTimedOut()
         finally:
             w.stop()
 

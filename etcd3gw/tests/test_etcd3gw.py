@@ -25,8 +25,8 @@ from testtools.testcase import unittest
 import urllib3
 
 from etcd3gw.client import Client
+from etcd3gw import exceptions
 from etcd3gw.tests import base
-from etcd3gw import watch
 
 
 def _is_etcd3_running():
@@ -256,15 +256,15 @@ class TestEtcd3Gateway(base.TestCase):
     def test_sequential_watch_prefix_once(self):
         try:
             self.client.watch_prefix_once('/doot/', 1)
-        except watch.WatchTimedOut:
+        except exceptions.WatchTimedOut:
             pass
         try:
             self.client.watch_prefix_once('/doot/', 1)
-        except watch.WatchTimedOut:
+        except exceptions.WatchTimedOut:
             pass
         try:
             self.client.watch_prefix_once('/doot/', 1)
-        except watch.WatchTimedOut:
+        except exceptions.WatchTimedOut:
             pass
 
     @unittest.skipUnless(
