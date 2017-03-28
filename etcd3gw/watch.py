@@ -24,8 +24,6 @@ class WatchTimedOut(Exception):
 
 def _watch(resp, callback):
     for line in resp.iter_content(chunk_size=None, decode_unicode=True):
-        if not line:
-            continue
         decoded_line = line.decode('utf-8')
         payload = json.loads(decoded_line)
         if 'created' in payload['result']:
@@ -42,20 +40,20 @@ def _watch(resp, callback):
 
 
 class Watcher(object):
+
+    KW_ARGS = ['start_revision', 'progress_notify', 'filters', 'prev_kv']
+    KW_ENCODED_ARGS = ['range_end']
+
     def __init__(self, client, key, callback, **kwargs):
         create_watch = {
             'key': _encode(key)
         }
-        if 'range_end' in kwargs:
-            create_watch['range_end'] = _encode(kwargs['range_end'])
-        if 'start_revision' in kwargs:
-            create_watch['start_revision'] = kwargs['start_revision']
-        if 'progress_notify' in kwargs:
-            create_watch['progress_notify'] = kwargs['progress_notify']
-        if 'filters' in kwargs:
-            create_watch['filters'] = kwargs['filters']
-        if 'prev_kv' in kwargs:
-            create_watch['prev_kv'] = kwargs['prev_kv']
+
+        for arg in kwargs:
+            if arg in self.KW_ARGS:
+                create_watch[arg] = kwargs[arg]
+            elif arg in self.KW_ENCODED_ARGS:
+                create_watch[arg] = _encode(kwargs[arg])
 
         create_request = {
             "create_request": create_watch
