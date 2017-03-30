@@ -94,6 +94,15 @@ class Etcd3Client(object):
         return self.post(self.get_url("/maintenance/status"),
                          json={})
 
+    def members(self):
+        """Lists all the members in the cluster.
+
+        :return: json response
+        """
+        result = self.post(self.get_url("/cluster/member/list"),
+                           json={})
+        return result['members']
+
     def lease(self, ttl=DEFAULT_TIMEOUT):
         """Create a Lease object given a timeout
 

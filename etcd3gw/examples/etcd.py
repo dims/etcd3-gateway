@@ -23,6 +23,9 @@ def main():
     result = client.status()
     print("cluster id : %r" % result['header']['cluster_id'])
 
+    result = client.members()
+    print("first member info : %r" % result[0])
+
     print('>>>> Lease')
     lease = client.lease()
     print("Lease id : %r" % lease.id)

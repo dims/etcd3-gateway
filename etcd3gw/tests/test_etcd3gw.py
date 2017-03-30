@@ -53,6 +53,14 @@ class TestEtcd3Gateway(base.TestCase):
 
     @unittest.skipUnless(
         _is_etcd3_running(), "etcd3 is not available")
+    def test_client_members(self):
+        response = self.client.members()
+        self.assertTrue(len(response) > 0)
+        self.assertIn('clientURLs', response[0])
+        self.assertIn('peerURLs', response[0])
+
+    @unittest.skipUnless(
+        _is_etcd3_running(), "etcd3 is not available")
     def test_client_with_keys_and_values(self):
         self.assertTrue(self.client.put('foo0', 'bar0'))
         self.assertTrue(self.client.put('foo1', 2001))
