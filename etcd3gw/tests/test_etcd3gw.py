@@ -302,3 +302,28 @@ class TestEtcd3Gateway(base.TestCase):
         self.assertTrue(lock.release())
         self.assertFalse(lock.release())
         self.assertFalse(lock.is_acquired())
+
+    @unittest.skipUnless(
+        _is_etcd3_running(), "etcd3 is not available")
+    def test_create_success(self):
+        key = '/foo/unique' + str(uuid.uuid4())
+        # Verify that key is empty
+        self.assertEqual([], self.client.get(key))
+
+        status = self.client.create(key, 'bar')
+        # Verify that key is 'bar'
+        self.assertEqual(['bar'], self.client.get(key))
+        self.assertTrue(status)
+
+    @unittest.skipUnless(
+        _is_etcd3_running(), "etcd3 is not available")
+    def test_create_fail(self):
+        key = '/foo/' + str(uuid.uuid4())
+        # Assign value to the key
+        self.client.put(key, 'bar')
+        self.assertEqual(['bar'], self.client.get(key))
+
+        status = self.client.create(key, 'goo')
+        # Verify that key is still 'bar'
+        self.assertEqual(['bar'], self.client.get(key))
+        self.assertFalse(status)
