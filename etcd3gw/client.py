@@ -122,6 +122,42 @@ class Etcd3Client(object):
         """
         return Lock(id, ttl=ttl, client=self)
 
+    def create(self, key, value):
+        """Atomically create the given key only if the key doesn't exist.
+
+        This verifies that the create_revision of a key equales to 0, then
+        creates the key with the value.
+        This operation takes place in a transaction.
+
+        :param key: key in etcd to create
+        :param value: value of the key
+        :type value: bytes or string
+        :returns: status of transaction, ``True`` if the create was
+                  successful, ``False`` otherwise
+        :rtype: bool
+        """
+        base64_key = _encode(key)
+        base64_value = _encode(value)
+        txn = {
+            'compare': [{
+                'key': base64_key,
+                'result': 'EQUAL',
+                'target': 'CREATE',
+                'create_revision': 0
+            }],
+            'success': [{
+                'request_put': {
+                    'key': base64_key,
+                    'value': base64_value,
+                }
+            }],
+            'failure': []
+        }
+        result = self.transaction(txn)
+        if 'succeeded' in result:
+            return result['succeeded']
+        return False
+
     def put(self, key, value, lease=None):
         """Put puts the given key into the key-value store.
 
