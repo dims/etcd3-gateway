@@ -1,23 +1,40 @@
-# ref: https://docs.travis-ci.com/user/languages/python
-language: python
-sudo: true
+dist: trusty
+sudo: required
 services:
   - docker
-env:
-  - TOXENV=pep8
-  - TOXENV=pypy
-  - TOXENV=pypy-etcd
-  - TOXENV=py27
-  - TOXENV=py27-etcd
-  - TOXENV=py27-codecov
-  - TOXENV=py35
-  - TOXENV=py35-etcd
-  - TOXENV=docs
-  - TOXENV=examples
-  - TOXENV=releasenotes
-
+language: python
+matrix:
+  include:
+    - python: 2.7
+      env: TOXENV=pep8
+    - python: 2.7
+      env: TOXENV=py27
+    - python: 2.7
+      env: TOXENV=py27-etcd
+    - python: 2.7
+      env: TOXENV=py27-codecov
+    - python: pypy
+      env: TOXENV=pypy
+    - python: pypy
+      env: TOXENV=pypy-etcd
+    - python: 3.5
+      env: TOXENV=py35
+    - python: 3.5
+      env: TOXENV=py35-etcd
+    - python: 3.6
+      env: TOXENV=py36
+    - python: 3.6
+      env: TOXENV=py36-etcd
+before_install:
+  - python --version
+  - uname -a
+  - lsb_release -a
 install:
-  - pip install tox
-
+  - python -m pip install pip -U
+  - python -m pip install tox coverage coveralls
+  - python -m virtualenv --version
+  - python -m easy_install --version
+  - python -m pip --version
+  - python -m tox --version
 script:
   - tox
