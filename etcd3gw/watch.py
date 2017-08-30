@@ -11,6 +11,8 @@
 #    under the License.
 
 import json
+import six
+import socket
 
 from etcd3gw.utils import _decode
 from etcd3gw.utils import _encode
@@ -63,7 +65,14 @@ class Watcher(object):
 
     def stop(self):
         try:
-            self._response.raw._fp.close()
+            if six.PY2:
+                self._response.raw._fp.close()
+            else:
+                s = socket.fromfd(self._response.raw._fp.fileno(),
+                                  socket.AF_INET,
+                                  socket.SOCK_STREAM)
+                s.shutdown(socket.SHUT_RDWR)
+                s.close()
         except Exception:
             pass
         self._response.connection.close()
