@@ -9,22 +9,30 @@ matrix:
       env: TOXENV=pep8
     - python: 2.7
       env: TOXENV=py27
-    - python: 2.7
-      env: TOXENV=py27-etcd
-    - python: 2.7
-      env: TOXENV=py27-codecov
     - python: pypy
       env: TOXENV=pypy
+    - python: 3.5
+      env: TOXENV=py35
+    - python: 3.6
+      env: TOXENV=py36
+    - python: 2.7
+      env: TOXENV=py27-codecov
+    - python: 2.7
+      env: TOXENV=py27-etcd
     - python: pypy
       env: TOXENV=pypy-etcd
     - python: 3.5
-      env: TOXENV=py35
+      env: TOXENV=py35-etcd
+    - python: 3.6
+      env: TOXENV=py36-etcd
+  allow_failures:
+    - python: pypy
+      env: TOXENV=pypy-etcd
     - python: 3.5
       env: TOXENV=py35-etcd
     - python: 3.6
-      env: TOXENV=py36
-    - python: 3.6
       env: TOXENV=py36-etcd
+
 before_install:
   - python --version
   - uname -a
