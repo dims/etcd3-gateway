@@ -64,7 +64,9 @@ class Etcd3Client(object):
         :param path:
         :return: url
         """
-        base_url = self.protocol + '://' + self.host + ':' + str(self.port)
+        host = ('[' + self.host + ']' if (self.host.find(':') != -1)
+                else self.host)
+        base_url = self.protocol + '://' + host + ':' + str(self.port)
         return base_url + '/v3alpha/' + path.lstrip("/")
 
     def post(self, *args, **kwargs):
