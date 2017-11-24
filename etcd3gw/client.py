@@ -366,7 +366,7 @@ class Etcd3Client(object):
     def watch_prefix(self, key_prefix, **kwargs):
         """The same as ``watch``, but watches a range of keys with a prefix."""
         kwargs['range_end'] = \
-            _increment_last_byte(_encode(key_prefix))
+            _increment_last_byte(key_prefix)
         return self.watch(key_prefix, **kwargs)
 
     def watch_once(self, key, timeout=None, **kwargs):
@@ -392,7 +392,7 @@ class Etcd3Client(object):
     def watch_prefix_once(self, key_prefix, timeout=None, **kwargs):
         """Watches a range of keys with a prefix, similar to watch_once"""
         kwargs['range_end'] = \
-            _increment_last_byte(_encode(key_prefix))
+            _increment_last_byte(key_prefix)
         return self.watch_once(key_prefix, timeout=timeout, **kwargs)
 
 
