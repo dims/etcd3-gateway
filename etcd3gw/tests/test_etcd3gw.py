@@ -120,6 +120,59 @@ class TestEtcd3Gateway(base.TestCase):
 
     @unittest.skipUnless(
         _is_etcd3_running(), "etcd3 is not available")
+    def test_get_prefix_sort_order_explicit_sort_target_key(self):
+        def remove_prefix(string, prefix):
+            return string[len(prefix):]
+
+        initial_keys_ordered = 'abcde'
+        initial_keys = 'aebdc'
+        initial_values = 'qwert'
+
+        for k, v in zip(initial_keys, initial_values):
+            self.client.put('/doot2/{}'.format(k), v)
+
+        keys = ''
+        for value, meta in self.client.get_prefix(
+                '/doot2', sort_order='ascend', sort_target='key'):
+            keys += remove_prefix(meta['key'], '/doot2/')
+
+        assert keys == initial_keys_ordered
+
+        reverse_keys = ''
+        for value, meta in self.client.get_prefix(
+                '/doot2', sort_order='descend', sort_target='key'):
+            reverse_keys += remove_prefix(meta['key'], '/doot2/')
+
+        assert reverse_keys == ''.join(reversed(initial_keys_ordered))
+
+    @unittest.skipUnless(
+        _is_etcd3_running(), "etcd3 is not available")
+    def test_get_prefix_sort_order_explicit_sort_target_rev(self):
+        def remove_prefix(string, prefix):
+            return string[len(prefix):]
+
+        initial_keys = 'aebdc'
+        initial_values = 'qwert'
+
+        for k, v in zip(initial_keys, initial_values):
+            self.client.put('/expsortmod/{}'.format(k), v)
+
+        keys = ''
+        for value, meta in self.client.get_prefix(
+                '/expsortmod', sort_order='ascend', sort_target='mod'):
+            keys += remove_prefix(meta['key'], '/expsortmod/')
+
+        assert keys == initial_keys
+
+        reverse_keys = ''
+        for value, meta in self.client.get_prefix(
+                '/expsortmod', sort_order='descend', sort_target='mod'):
+            reverse_keys += remove_prefix(meta['key'], '/expsortmod/')
+
+        assert reverse_keys == ''.join(reversed(initial_keys))
+
+    @unittest.skipUnless(
+        _is_etcd3_running(), "etcd3 is not available")
     def test_replace_success(self):
         key = '/doot/thing' + str(uuid.uuid4())
         self.client.put(key, 'toot')

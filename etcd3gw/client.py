@@ -27,7 +27,7 @@ from etcd3gw.utils import _increment_last_byte
 from etcd3gw.utils import DEFAULT_TIMEOUT
 from etcd3gw import watch
 
-_SORT_ORDER = ['ascend', 'descend']
+_SORT_ORDER = ['none', 'ascend', 'descend']
 _SORT_TARGET = ['key', 'version', 'create', 'mod', 'value']
 
 _EXCEPTIONS_BY_CODE = {
@@ -194,14 +194,14 @@ class Etcd3Client(object):
         try:
             order = 0
             if sort_order:
-                order = _SORT_ORDER.index(sort_order) + 1
+                order = _SORT_ORDER.index(sort_order)
         except ValueError:
             raise ValueError('sort_order must be one of "ascend" or "descend"')
 
         try:
             target = 0
             if sort_target:
-                target = _SORT_TARGET.index(sort_target) + 1
+                target = _SORT_TARGET.index(sort_target)
         except ValueError:
             raise ValueError('sort_target must be one of "key", '
                              '"version", "create", "mod" or "value"')
@@ -251,7 +251,8 @@ class Etcd3Client(object):
         return self.get(key_prefix,
                         metadata=True,
                         range_end=_encode(_increment_last_byte(key_prefix)),
-                        sort_order=sort_order)
+                        sort_order=sort_order,
+                        sort_target=sort_target)
 
     def replace(self, key, initial_value, new_value):
         """Atomically replace the value of a key with a new value.
