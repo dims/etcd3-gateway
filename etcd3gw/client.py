@@ -51,12 +51,14 @@ class Etcd3Client(object):
         self.host = host
         self.port = port
         self.protocol = protocol
+
         self.session = requests.Session()
-        self.kwargs = {
-            "timeout": timeout,
-            "verify": ca_cert,
-            "cert": (cert_cert, cert_key)
-        }
+        if timeout is not None:
+            self.session.timeout = timeout
+        if ca_cert is not None:
+            self.session.verify = ca_cert
+        if cert_cert is not None and cert_key is not None:
+            self.session.cert = (cert_cert, cert_key)
 
     def get_url(self, path):
         """Construct a full url to the v3alpha API given a specific path
