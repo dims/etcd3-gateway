@@ -30,7 +30,7 @@ class Lock(object):
         self.client = client
         self.key = LOCK_PREFIX + self.name
         self.lease = None
-        self._uuid = None
+        self._uuid = str(uuid.uuid1())
 
     @property
     def uuid(self):
@@ -40,7 +40,6 @@ class Lock(object):
     def acquire(self):
         """Acquire the lock."""
         self.lease = self.client.lease(self.ttl)
-        self._uuid = str(uuid.uuid1())
 
         base64_key = _encode(self.key)
         base64_value = _encode(self._uuid)
