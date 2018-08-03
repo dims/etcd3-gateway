@@ -400,11 +400,13 @@ class Etcd3Client(object):
 
 
 def client(host='localhost', port=2379,
-           ca_cert=None, cert_key=None, cert_cert=None, timeout=None):
+           ca_cert=None, cert_key=None, cert_cert=None,
+           timeout=None, protocol="http"):
     """Return an instance of an Etcd3Client."""
     return Etcd3Client(host=host,
                        port=port,
                        ca_cert=ca_cert,
                        cert_key=cert_key,
                        cert_cert=cert_cert,
-                       timeout=timeout)
+                       timeout=timeout,
+                       protocol=protocol)
