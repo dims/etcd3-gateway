@@ -38,7 +38,7 @@ def _decode(data):
     """
     if not isinstance(data, bytes_types):
         data = six.b(str(data))
-    return base64.b64decode(data).decode("utf-8")
+    return base64.b64decode(data.decode("utf-8"))
 
 
 def _increment_last_byte(data):
