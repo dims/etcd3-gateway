@@ -34,7 +34,7 @@ def _decode(data):
     """Decode the base-64 encoded string
 
     :param data:
-    :return: decoded string
+    :return: decoded data
     """
     if not isinstance(data, bytes_types):
         data = six.b(str(data))
