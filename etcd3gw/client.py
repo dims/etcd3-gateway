@@ -117,13 +117,15 @@ class Etcd3Client(object):
                            json={"TTL": ttl, "ID": 0})
         return Lease(int(result['ID']), client=self)
 
-    def lock(self, id=str(uuid.uuid4()), ttl=DEFAULT_TIMEOUT):
+    def lock(self, id=None, ttl=DEFAULT_TIMEOUT):
         """Create a Lock object given an ID and timeout
 
         :param id: ID for the lock, creates a new uuid if not provided
         :param ttl: timeout
         :return: Lock object
         """
+        if id is None:
+            id = str(uuid.uuid4())
         return Lock(id, ttl=ttl, client=self)
 
     def create(self, key, value):
