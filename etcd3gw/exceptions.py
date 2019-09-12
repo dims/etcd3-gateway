@@ -12,7 +12,9 @@
 
 
 class Etcd3Exception(Exception):
-    pass
+    def __init__(self, msg, detail_text=None):
+        super(Etcd3Exception, self).__init__(msg)
+        self.detail_text = detail_text
 
 
 class WatchTimedOut(Etcd3Exception):

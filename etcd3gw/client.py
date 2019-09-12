@@ -83,7 +83,7 @@ class Etcd3Client(object):
             if resp.status_code in _EXCEPTIONS_BY_CODE:
                 raise _EXCEPTIONS_BY_CODE[resp.status_code](resp.reason)
             if resp.status_code != requests.codes['ok']:
-                raise exceptions.Etcd3Exception(resp.reason)
+                raise exceptions.Etcd3Exception(resp.reason, resp.text)
         except requests.exceptions.Timeout as ex:
             raise exceptions.ConnectionTimeoutError(six.text_type(ex))
         except requests.exceptions.ConnectionError as ex:
