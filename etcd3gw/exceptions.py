@@ -12,8 +12,8 @@
 
 
 class Etcd3Exception(Exception):
-    def __init__(self, msg, detail_text=None):
-        super(Etcd3Exception, self).__init__(msg)
+    def __init__(self, detail_text=None, *args):
+        super(Etcd3Exception, self).__init__(*args)
         self.detail_text = detail_text
 
 
