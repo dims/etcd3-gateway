@@ -14,6 +14,7 @@ import mock
 
 from etcd3gw.client import Etcd3Client
 from etcd3gw.exceptions import Etcd3Exception
+from etcd3gw.exceptions import InternalServerError
 from etcd3gw.tests import base
 
 
@@ -53,4 +54,23 @@ class TestEtcd3Gateway(base.TestCase):
                 self.assertEqual(e.detail_text, '''{
 "error": "etcdserver: mvcc: required revision has been compacted",
 "code": 11
+}''')
+
+    def test_client_exceptions_by_code(self):
+        client = Etcd3Client(host="127.0.0.1")
+        with mock.patch.object(client, "session") as mock_session:
+            mock_response = mock.Mock()
+            mock_response.status_code = 500
+            mock_response.reason = "Internal Server Error"
+            mock_response.text = '''{
+"error": "etcdserver: unable to reach quorum"
+}'''
+            mock_session.post.return_value = mock_response
+            try:
+                client.status()
+                self.assertFalse(True)
+            except InternalServerError as e:
+                self.assertEqual(str(e), "Internal Server Error")
+                self.assertEqual(e.detail_text, '''{
+"error": "etcdserver: unable to reach quorum"
 }''')

@@ -81,7 +81,10 @@ class Etcd3Client(object):
         try:
             resp = self.session.post(*args, **kwargs)
             if resp.status_code in _EXCEPTIONS_BY_CODE:
-                raise _EXCEPTIONS_BY_CODE[resp.status_code](resp.reason)
+                raise _EXCEPTIONS_BY_CODE[resp.status_code](
+                    resp.text,
+                    resp.reason
+                )
             if resp.status_code != requests.codes['ok']:
                 raise exceptions.Etcd3Exception(resp.text, resp.reason)
         except requests.exceptions.Timeout as ex:
