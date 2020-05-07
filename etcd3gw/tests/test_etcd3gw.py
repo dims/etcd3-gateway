@@ -19,7 +19,6 @@ Tests for `etcd3gw` module.
 
 import six
 import threading
-import time
 import uuid
 
 from testtools.testcase import unittest
@@ -29,6 +28,11 @@ from etcd3gw.client import Etcd3Client
 from etcd3gw import exceptions
 from etcd3gw.tests import base
 
+try:
+    # Python 3.8 : time.clock was deprecated and removed.
+    from time import perf_counter as clock
+except ImportError:
+    from time import clock
 
 def _is_etcd3_running():
     try:
@@ -344,7 +348,7 @@ class TestEtcd3Gateway(base.TestCase):
     @unittest.skipUnless(
         _is_etcd3_running(), "etcd3 is not available")
     def test_client_locks(self):
-        lock = self.client.lock(id='xyz-%s' % time.clock(), ttl=60)
+        lock = self.client.lock(id='xyz-%s' % clock(), ttl=60)
         self.assertIsNotNone(lock)
 
         self.assertTrue(lock.acquire())
