@@ -6,4 +6,4 @@
 [![pypi status](https://img.shields.io/pypi/status/etcd3gw.svg)](https://pypi.python.org/pypi/etcd3gw)
 [![pypi supported versions](https://img.shields.io/pypi/pyversions/etcd3gw.svg)](https://pypi.python.org/pypi/etcd3gw)
 
-A python client for etcd3 grpc-gateway v3alpha API
+A python client for etcd3 grpc-gateway v3 API
