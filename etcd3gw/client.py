@@ -133,7 +133,7 @@ class Etcd3Client(object):
             id = str(uuid.uuid4())
         return Lock(id, ttl=ttl, client=self)
 
-    def create(self, key, value):
+    def create(self, key, value, lease=None):
         """Atomically create the given key only if the key doesn't exist.
 
         This verifies that the create_revision of a key equales to 0, then
@@ -143,6 +143,7 @@ class Etcd3Client(object):
         :param key: key in etcd to create
         :param value: value of the key
         :type value: bytes or string
+        :param lease: lease to connect with, optional
         :returns: status of transaction, ``True`` if the create was
                   successful, ``False`` otherwise
         :rtype: bool
@@ -164,6 +165,8 @@ class Etcd3Client(object):
             }],
             'failure': []
         }
+        if lease:
+            txn['success'][0]['request_put']['lease'] = lease.id
         result = self.transaction(txn)
         if 'succeeded' in result:
             return result['succeeded']

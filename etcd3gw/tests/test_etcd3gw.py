@@ -388,3 +388,19 @@ class TestEtcd3Gateway(base.TestCase):
         # Verify that key is still 'bar'
         self.assertEqual([six.b('bar')], self.client.get(key))
         self.assertFalse(status)
+
+    @unittest.skipUnless(
+        _is_etcd3_running(), "etcd3 is not available")
+    def test_create_with_lease_success(self):
+        key = '/foo/unique' + str(uuid.uuid4())
+        # Verify that key is empty
+        self.assertEqual([], self.client.get(key))
+        lease = self.client.lease()
+
+        status = self.client.create(key, 'bar', lease=lease)
+        # Verify that key is 'bar'
+        self.assertEqual([six.b('bar')], self.client.get(key))
+        self.assertTrue(status)
+        keys = lease.keys()
+        self.assertEqual(1, len(keys))
+        self.assertIn(six.b(key), keys)
