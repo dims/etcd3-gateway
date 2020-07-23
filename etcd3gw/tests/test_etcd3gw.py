@@ -19,6 +19,7 @@ Tests for `etcd3gw` module.
 
 import six
 import threading
+import time
 import uuid
 
 from testtools.testcase import unittest
@@ -33,6 +34,7 @@ try:
     from time import perf_counter as clock
 except ImportError:
     from time import clock
+
 
 def _is_etcd3_running():
     try:
