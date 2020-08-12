@@ -74,6 +74,7 @@ def _try_import(import_str, default=None):
     except ImportError:
         return default
 
+
 # These may or may not exist; so carefully import them if we can...
 _eventlet = _try_import('eventlet')
 _patcher = _try_import('eventlet.patcher')
