@@ -22,17 +22,17 @@ class TestEtcd3Gateway(base.TestCase):
 
     def test_client_default(self):
         client = Etcd3Client()
-        self.assertEqual("http://localhost:2379/v3beta/lease/grant",
+        self.assertEqual("http://localhost:2379/v3alpha/lease/grant",
                          client.get_url("/lease/grant"))
 
     def test_client_ipv4(self):
         client = Etcd3Client(host="127.0.0.1")
-        self.assertEqual("http://127.0.0.1:2379/v3beta/lease/grant",
+        self.assertEqual("http://127.0.0.1:2379/v3alpha/lease/grant",
                          client.get_url("/lease/grant"))
 
     def test_client_ipv6(self):
         client = Etcd3Client(host="::1")
-        self.assertEqual("http://[::1]:2379/v3beta/lease/grant",
+        self.assertEqual("http://[::1]:2379/v3alpha/lease/grant",
                          client.get_url("/lease/grant"))
 
     def test_client_bad_request(self):

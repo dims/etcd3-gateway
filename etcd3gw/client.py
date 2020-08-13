@@ -42,7 +42,7 @@ _EXCEPTIONS_BY_CODE = {
 class Etcd3Client(object):
     def __init__(self, host='localhost', port=2379, protocol="http",
                  ca_cert=None, cert_key=None, cert_cert=None, timeout=None,
-                 api_path='/v3beta/'):
+                 api_path='/v3alpha/'):
         """Construct an client to talk to etcd3's grpc-gateway's /v3 HTTP API
 
         :param host:
